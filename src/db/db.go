@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -24,7 +24,7 @@ func get_db_collection() (*mongo.Collection, *mongo.Client) {
 }
 
 // Get patient information by phone number
-func GetPatientInfoByPhone(phone_num string) string {
+func GetPatientInfoByPhone(phone_num string) primitive.M {
 	collection, client := get_db_collection()
 	if collection == nil || client == nil {
 		panic("unable to proceed operation with mongo")
@@ -35,11 +35,6 @@ func GetPatientInfoByPhone(phone_num string) string {
 		// handle error
 		panic(err)
 	}
-	jsonbytes, err := json.Marshal(result)
-	if err != nil {
-		panic(err)
-	}
-	data := string(jsonbytes)
 	client.Disconnect(context.Background())
-	return data
+	return result
 }

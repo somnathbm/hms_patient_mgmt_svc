@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
 	"hms_patient_mgmt_svc/db"
@@ -21,7 +20,9 @@ func Api() {
 	server.GET("/patients/:phone", func(c *gin.Context) {
 		phone_num := c.Param("phone")
 		result := db.GetPatientInfoByPhone(phone_num)
-		fmt.Println(result)
+		c.JSON(http.StatusOK, gin.H{
+			"data": result,
+		})
 	})
 
 	server.Run()
