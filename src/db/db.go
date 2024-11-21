@@ -2,13 +2,17 @@ package db
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
+	"hms_patient_mgmt_svc/models"
 )
 
 // Get mongo collection for 1 minute connection pool
@@ -24,17 +28,47 @@ func get_db_collection() (*mongo.Collection, *mongo.Client) {
 }
 
 // Get patient information by phone number
-func GetPatientInfoByPhone(phone_num string) primitive.M {
+func GetPatientInfoByPhone(phone_num string) (primitive.M, error) {
 	collection, client := get_db_collection()
 	if collection == nil || client == nil {
-		panic("unable to proceed operation with mongo")
+		// panic("unable to proceed operation with mongo")
+		return nil, errors.New("could not get db")
 	}
 	var result bson.M
 	err := collection.FindOne(context.TODO(), bson.M{"basic_info.phone": phone_num}, options.FindOne().SetProjection(bson.M{"_id": 0})).Decode(&result)
-	if err != nil {
+	if err != nil && err == mongo.ErrNoDocuments {
 		// handle error
-		panic(err)
+		return nil, err
 	}
 	client.Disconnect(context.Background())
-	return result
+	return result, nil
+}
+
+// Create new patient that includes a unique patient ID
+func CreateNewPatient(patient_info models.PatientInfo) (*string, error) {
+	collection, client := get_db_collection()
+	if collection == nil || client == nil {
+		// panic("unable to proceed operation with mongo")
+		return nil, errors.New("could not get db")
+	}
+
+	// generate a unique patient ID
+	patientId := uuid.New().String()
+
+	// insert the patientId into the patient medical info struct
+	patient_info.Medical_info.PatientId = patientId
+
+	// insert the data
+	_, err := collection.InsertOne(context.TODO(), patient_info)
+	if err != nil {
+		// fmt.Println(err.Error())
+		client.Disconnect(context.Background())
+		return nil, err
+	}
+	// fmt.Println(result.InsertedID)
+	// close the connection
+	client.Disconnect(context.Background())
+
+	// return the data back
+	return &patientId, nil
 }
