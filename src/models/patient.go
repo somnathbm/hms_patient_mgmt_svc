@@ -14,6 +14,7 @@ type PatientMedicalInfo struct {
 	Illness_primary string `json:"illness_primary" bson:"illness_primary" binding:"required"`
 	Department      string `json:"department" bson:"department" binding:"required"`
 	Serious         bool   `json:"serious" bson:"serious,omitempty"`
+	Planned         bool   `json:"planned" bson:"planned,omitempty"`
 }
 
 type PatientInfo struct {
