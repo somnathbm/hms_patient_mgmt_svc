@@ -1,8 +1,8 @@
 resources:
 - ../base
 
-nameSuffix: -dev
-namespace: hms-dev
+nameSuffix: -prod
+namespace: hms-prod
 
 patches:
   - target:
