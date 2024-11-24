@@ -7,6 +7,7 @@ RUN go mod download
 COPY ./api ./api/
 COPY ./db ./db/
 COPY ./models ./models/
+COPY ./utils ./utils/
 COPY main.go ./main.go
 
 RUN go build -o ./dist/hms-patient-mgmt.sh
