@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -25,13 +26,18 @@ func get_db_collection() (*mongo.Collection, *mongo.Client) {
 		"APP_DB_NAME":     os.Getenv("APP_DB_NAME"),
 		"COLLECTION_NAME": os.Getenv("COLLECTION_NAME"),
 	}
+	fmt.Println("base64 encoded data from ENV")
+	fmt.Println(os.Getenv("APP_DB_URI"))
 
 	base64_decoded_data, base64_err := utils.DecodeBase64(base64_encoded_data)
 	if base64_err != nil {
 		// fmt.Println("base64 decode error", base64_err.Error())
 	}
 
-	client, err := mongo.Connect(options.Client().ApplyURI(base64_decoded_data["APP_DB_URI"]))
+	// fmt.Println("base64 decoded data")
+	fmt.Println(base64_decoded_data["APP_DB_URI"])
+
+	client, err := mongo.Connect(options.Client().ApplyURI(os.Getenv("APP_DB_URI")))
 	if err != nil {
 		panic(err)
 	}
