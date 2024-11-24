@@ -13,17 +13,29 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	"hms_patient_mgmt_svc/models"
+	"hms_patient_mgmt_svc/utils"
 )
 
 // Get mongo collection for 1 minute connection pool
 func get_db_collection() (*mongo.Collection, *mongo.Client) {
 	_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(options.Client().ApplyURI(os.Getenv("APP_DB_URI")))
+	var base64_encoded_data = map[string]string{
+		"APP_DB_URI":      os.Getenv("APP_DB_URI"),
+		"APP_DB_NAME":     os.Getenv("APP_DB_NAME"),
+		"COLLECTION_NAME": os.Getenv("COLLECTION_NAME"),
+	}
+
+	base64_decoded_data, base64_err := utils.DecodeBase64(base64_encoded_data)
+	if base64_err != nil {
+		// fmt.Println("base64 decode error", base64_err.Error())
+	}
+
+	client, err := mongo.Connect(options.Client().ApplyURI(base64_decoded_data["APP_DB_URI"]))
 	if err != nil {
 		panic(err)
 	}
-	collection := client.Database(os.Getenv("APP_DB_NAME")).Collection(os.Getenv("COLLECTION_NAME"))
+	collection := client.Database(base64_decoded_data["APP_DB_NAME"]).Collection(base64_decoded_data["COLLECTION_NAME"])
 	return collection, client
 }
 
