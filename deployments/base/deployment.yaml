@@ -28,9 +28,9 @@ spec:
       serviceAccountName: hms-pods-sa
       containers:
       - name: hms-patient-mgmt-app
-        image: somnathbm/hms-patient-mgmt-svc:v0.0.1
+        image: somnathbm/hms-patient-mgmt-svc:v0.0.4
         ports:
         - containerPort: 8080
         envFrom:
         - secretRef:
-          name: hms-patient-mgmt-secret
+            name: hms-patient-mgmt-secret
