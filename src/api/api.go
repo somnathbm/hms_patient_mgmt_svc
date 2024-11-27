@@ -9,11 +9,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/penglongli/gin-metrics/ginmetrics"
+
 	"hms_patient_mgmt_svc/models"
 )
 
 func Api() {
 	server := gin.Default()
+
+	// get global monitor object
+	monitor := ginmetrics.GetMonitor()
+
+	// set metric path
+	monitor.SetMetricPath("/metrics")
+
+	// use the monitor
+	monitor.Use(server)
 
 	// for service liveness check
 	server.GET("/healthy", func(c *gin.Context) {
