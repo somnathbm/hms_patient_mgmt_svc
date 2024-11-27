@@ -9,7 +9,7 @@ spec:
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 8080
+    targetPort: web
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -28,9 +28,10 @@ spec:
       serviceAccountName: hms-pods-sa
       containers:
       - name: hms-patient-mgmt-app
-        image: somnathbm/hms-patient-mgmt-svc:v0.0.4
+        image: somnathbm/hms-patient-mgmt-svc:v0.0.5
         ports:
-        - containerPort: 8080
+        - name: web
+          containerPort: 8080
         envFrom:
         - secretRef:
             name: hms-patient-mgmt-secret
