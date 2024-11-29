@@ -2,7 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hms-patient-mgmt-svc
-  app: hms-patient-mgmt-svc
+  labels:
+    app: hms-patient-mgmt-svc
 spec:
   selector:
     app: hms-patient-mgmt-pod
@@ -30,6 +31,12 @@ spec:
       containers:
       - name: hms-patient-mgmt-app
         image: somnathbm/hms-patient-mgmt-svc:v0.0.5
+        livenessProbe:
+          httpGet:
+            path: /healthy
+            port: http-web
+          initialDelaySeconds: 10
+          periodSeconds: 20
         ports:
         - name: http-web
           containerPort: 8080
