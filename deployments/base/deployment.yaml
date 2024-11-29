@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hms-patient-mgmt-svc
+  app: hms-patient-mgmt-svc
 spec:
   selector:
     app: hms-patient-mgmt-pod
@@ -9,7 +10,7 @@ spec:
   ports:
   - protocol: TCP
     port: 80
-    targetPort: web
+    targetPort: http-web
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,7 +31,7 @@ spec:
       - name: hms-patient-mgmt-app
         image: somnathbm/hms-patient-mgmt-svc:v0.0.5
         ports:
-        - name: web
+        - name: http-web
           containerPort: 8080
         envFrom:
         - secretRef:
