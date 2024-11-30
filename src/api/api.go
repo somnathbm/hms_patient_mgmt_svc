@@ -8,33 +8,41 @@ import (
 	"hms_patient_mgmt_svc/db"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/penglongli/gin-metrics/ginmetrics"
 
 	"hms_patient_mgmt_svc/models"
 )
 
-func Api() {
-	server := gin.Default()
-
-	// get global monitor object
-	monitor := ginmetrics.GetMonitor()
-
-	// set metric path
-	monitor.SetMetricPath("/metrics")
-
-	// use the monitor
-	monitor.Use(server)
+func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
+	appRouter := gin.Default()
 
 	// for service liveness check
-	server.GET("/healthy", func(c *gin.Context) {
+	appRouter.GET("/healthy", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "healthy!",
 		})
 	})
 
+	// get all patients
+	appRouter.GET("/patients", func(c *gin.Context) {
+		result, err := db.GetAllPatients()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"data":  "not found",
+				"error": err.Error(),
+			})
+			return
+		}
+		patientNum := len(result)
+		appMonitor.GetMetric("hms_patient_mgmt_patients_total").Add([]string{}, float64(patientNum))
+		c.JSON(http.StatusOK, gin.H{
+			"data": result,
+		})
+		return
+	})
+
 	// patient lookup using phone number
-	server.GET("/patients/:phone", func(c *gin.Context) {
+	appRouter.GET("/patients/:phone", func(c *gin.Context) {
 		phone_num := c.Param("phone")
 		result, err := db.GetPatientInfoByPhone(phone_num)
 		if err != nil {
@@ -50,7 +58,7 @@ func Api() {
 		return
 	})
 
-	server.POST("/patients", func(c *gin.Context) {
+	appRouter.POST("/patients", func(c *gin.Context) {
 		var patientData models.PatientInfo
 
 		// ↴ this validates the payload
@@ -83,6 +91,10 @@ func Api() {
 				}
 				// ↴ else insert the patient id into the patient info and return the data back
 				patientData.Medical_info.PatientId = *insertResult
+
+				// increment the metrics
+				appMonitor.GetMetric("hms_patient_mgmt_patients_total").Inc([]string{})
+
 				c.JSON(http.StatusOK, gin.H{
 					"data": patientData,
 				})
@@ -97,5 +109,7 @@ func Api() {
 		}
 	})
 
-	server.Run()
+	appRouter.Run()
+
+	return appRouter
 }

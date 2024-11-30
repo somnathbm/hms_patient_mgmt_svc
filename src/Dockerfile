@@ -16,4 +16,5 @@ FROM golang:alpine AS run
 WORKDIR /app
 COPY --from=build --chmod=500 /app/dist/hms-patient-mgmt.sh ./
 EXPOSE 8080
+EXPOSE 8081
 CMD ["./hms-patient-mgmt.sh"]

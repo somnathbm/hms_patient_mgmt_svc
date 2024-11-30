@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -26,6 +27,35 @@ func get_db_collection() (*mongo.Collection, *mongo.Client) {
 	}
 	collection := client.Database(os.Getenv("APP_DB_NAME")).Collection(os.Getenv("COLLECTION_NAME"))
 	return collection, client
+}
+
+// Get all patients
+func GetAllPatients() ([]models.PatientInfo, error) {
+	var results []models.PatientInfo
+	var decodedResult []models.PatientInfo
+
+	collection, client := get_db_collection()
+	if collection == nil || client == nil {
+		// panic("unable to proceed operation with mongo")
+		return nil, errors.New("could not get db")
+	}
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil && err == mongo.ErrNoDocuments {
+		// handle error
+		return nil, err
+	}
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		fmt.Println("ERROR Ocurred!!")
+		panic(err)
+	}
+	// Prints the results of the find operation as structs
+	for _, result := range results {
+		cursor.Decode(&result)
+		decodedResult = append(decodedResult, result)
+	}
+	client.Disconnect(context.Background())
+	return decodedResult, nil
 }
 
 // Get patient information by phone number
