@@ -13,5 +13,5 @@ spec:
     matchNames:
     - hms-dev
   podMetricsEndpoints:
-  - port: http-web
+  - port: metrics
     path: /metrics
