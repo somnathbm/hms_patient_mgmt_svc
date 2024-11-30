@@ -9,9 +9,10 @@ spec:
     app: hms-patient-mgmt-pod
   type: ClusterIP
   ports:
-  - protocol: TCP
+  - name: app-port
+    protocol: TCP
     port: 80
-    targetPort: http-web
+    targetPort: app
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -34,12 +35,14 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthy
-            port: http-web
+            port: app
           initialDelaySeconds: 10
           periodSeconds: 20
         ports:
-        - name: http-web
+        - name: app
           containerPort: 8080
+        - name: metrics
+          containerPort: 8081
         envFrom:
         - secretRef:
             name: hms-patient-mgmt-secret

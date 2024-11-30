@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hms-patient-mgmt-metrics-svc
+  labels:
+    app: hms-patient-mgmt-metrics
+spec:
+  selector:
+    app: hms-patient-mgmt-pod
+  type: ClusterIP
+  ports:
+  - name: metrics-port
+    protocol: TCP
+    port: 80
+    targetPort: metrics
