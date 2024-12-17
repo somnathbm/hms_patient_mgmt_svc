@@ -8,6 +8,7 @@ COPY ./api ./api/
 COPY ./db ./db/
 COPY ./models ./models/
 COPY ./utils ./utils/
+COPY ./metrics ./metrics/
 COPY main.go ./main.go
 
 RUN go build -o ./dist/hms-patient-mgmt.sh
