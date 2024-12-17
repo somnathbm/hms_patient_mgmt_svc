@@ -7,7 +7,6 @@ metadata:
 spec:
   selector:
     app: hms-patient-mgmt-pod
-  type: ClusterIP
   ports:
   - name: app-port
     protocol: TCP
@@ -31,10 +30,10 @@ spec:
       serviceAccountName: hms-pods-sa
       containers:
       - name: hms-patient-mgmt-app
-        image: somnathbm/hms-patient-mgmt-svc:v0.0.5
+        image: somnathbm/hms-patient-mgmt-svc:v0.0.6
         livenessProbe:
           httpGet:
-            path: /healthy
+            path: /pm/healthy
             port: app
           initialDelaySeconds: 10
           periodSeconds: 20
