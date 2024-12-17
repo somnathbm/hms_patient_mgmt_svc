@@ -17,14 +17,14 @@ func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
 	appRouter := gin.Default()
 
 	// for service liveness check
-	appRouter.GET("/healthy", func(c *gin.Context) {
+	appRouter.GET("/pm/healthy", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "healthy!",
 		})
 	})
 
 	// get all patients
-	appRouter.GET("/patients", func(c *gin.Context) {
+	appRouter.GET("/pm/patients", func(c *gin.Context) {
 		result, err := db.GetAllPatients()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -42,7 +42,7 @@ func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
 	})
 
 	// patient lookup using phone number
-	appRouter.GET("/patients/:phone", func(c *gin.Context) {
+	appRouter.GET("/pm/patients/:phone", func(c *gin.Context) {
 		phone_num := c.Param("phone")
 		result, err := db.GetPatientInfoByPhone(phone_num)
 		if err != nil {
@@ -58,7 +58,7 @@ func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
 		return
 	})
 
-	appRouter.POST("/patients", func(c *gin.Context) {
+	appRouter.POST("/pm/patients", func(c *gin.Context) {
 		var patientData models.PatientInfo
 
 		// ↴ this validates the payload
