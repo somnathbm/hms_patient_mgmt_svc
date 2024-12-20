@@ -8,12 +8,13 @@ import (
 	"hms_patient_mgmt_svc/db"
 
 	"github.com/gin-gonic/gin"
-	"github.com/penglongli/gin-metrics/ginmetrics"
+	// "github.com/penglongli/gin-metrics/ginmetrics"
 
 	"hms_patient_mgmt_svc/models"
 )
 
-func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
+// func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
+func RunAppServer() *gin.Engine {
 	appRouter := gin.Default()
 
 	// for service liveness check
@@ -33,8 +34,8 @@ func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
 			})
 			return
 		}
-		patientNum := len(result)
-		appMonitor.GetMetric("hms_patient_mgmt_patients_total").Add([]string{}, float64(patientNum))
+		// patientNum := len(result)
+		// appMonitor.GetMetric("hms_patient_mgmt_patients_total").Add([]string{}, float64(patientNum))
 		c.JSON(http.StatusOK, gin.H{
 			"data": result,
 		})
@@ -93,7 +94,7 @@ func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
 				patientData.Medical_info.PatientId = *insertResult
 
 				// increment the metrics
-				appMonitor.GetMetric("hms_patient_mgmt_patients_total").Inc([]string{})
+				// appMonitor.GetMetric("hms_patient_mgmt_patients_total").Inc([]string{})
 
 				c.JSON(http.StatusOK, gin.H{
 					"data": patientData,

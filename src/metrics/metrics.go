@@ -1,69 +1,73 @@
 package metrics
 
-import (
-	"github.com/gin-gonic/gin"
-	"github.com/penglongli/gin-metrics/ginmetrics"
-)
+func hello() {
 
-func GetMetricsInstance() *ginmetrics.Monitor {
-	monitor := ginmetrics.GetMonitor()
-	return monitor
 }
 
-func RunMetricsServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
-	metricRouter := gin.Default()
+// import (
+// 	"github.com/gin-gonic/gin"
+// 	// "github.com/penglongli/gin-metrics/ginmetrics"
+// )
 
-	appMonitor.SetMetricPath("/metrics")
+// func GetMetricsInstance() *ginmetrics.Monitor {
+// 	monitor := ginmetrics.GetMonitor()
+// 	return monitor
+// }
 
-	// // add the metrics
-	appMonitor.AddMetric(TotalPatientsMetric())
-	appMonitor.AddMetric(TotalEmergencyPatients())
-	appMonitor.AddMetric(TotalIPDPatients())
-	appMonitor.AddMetric(TotalOPDPatients())
+// func RunMetricsServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
+// 	metricRouter := gin.Default()
 
-	// appMonitor.UseWithoutExposingEndpoint(appRouter)
-	appMonitor.Expose(metricRouter)
+// 	appMonitor.SetMetricPath("/metrics")
 
-	return metricRouter
-}
+// 	// // add the metrics
+// 	appMonitor.AddMetric(TotalPatientsMetric())
+// 	appMonitor.AddMetric(TotalEmergencyPatients())
+// 	appMonitor.AddMetric(TotalIPDPatients())
+// 	appMonitor.AddMetric(TotalOPDPatients())
 
-// Total patients
-func TotalPatientsMetric() *ginmetrics.Metric {
-	patientMetric := &ginmetrics.Metric{
-		Type:        ginmetrics.Counter,
-		Name:        "hms_patient_mgmt_patients_total",
-		Description: "Number of total patients",
-		// Labels:      []string{"patients_total"},
-	}
-	return patientMetric
-}
+// 	// appMonitor.UseWithoutExposingEndpoint(appRouter)
+// 	appMonitor.Expose(metricRouter)
 
-// Total emergency patients
-func TotalEmergencyPatients() *ginmetrics.Metric {
-	patientMetric := &ginmetrics.Metric{
-		Type:        ginmetrics.Counter,
-		Name:        "hms_patient_mgmt_patients_emg",
-		Description: "Number of total emergency patients",
-	}
-	return patientMetric
-}
+// 	return metricRouter
+// }
 
-// Total IPD patients
-func TotalIPDPatients() *ginmetrics.Metric {
-	patientMetric := &ginmetrics.Metric{
-		Type:        ginmetrics.Counter,
-		Name:        "hms_patient_mgmt_patients_ipd",
-		Description: "Number of total IPD (In-Patient Department) patients",
-	}
-	return patientMetric
-}
+// // Total patients
+// func TotalPatientsMetric() *ginmetrics.Metric {
+// 	patientMetric := &ginmetrics.Metric{
+// 		Type:        ginmetrics.Counter,
+// 		Name:        "hms_patient_mgmt_patients_total",
+// 		Description: "Number of total patients",
+// 		// Labels:      []string{"patients_total"},
+// 	}
+// 	return patientMetric
+// }
 
-// Total OPD patients
-func TotalOPDPatients() *ginmetrics.Metric {
-	patientMetric := &ginmetrics.Metric{
-		Type:        ginmetrics.Counter,
-		Name:        "hms_patient_mgmt_patients_opd",
-		Description: "Number of total OPD (Out-Patient Department) patients",
-	}
-	return patientMetric
-}
+// // Total emergency patients
+// func TotalEmergencyPatients() *ginmetrics.Metric {
+// 	patientMetric := &ginmetrics.Metric{
+// 		Type:        ginmetrics.Counter,
+// 		Name:        "hms_patient_mgmt_patients_emg",
+// 		Description: "Number of total emergency patients",
+// 	}
+// 	return patientMetric
+// }
+
+// // Total IPD patients
+// func TotalIPDPatients() *ginmetrics.Metric {
+// 	patientMetric := &ginmetrics.Metric{
+// 		Type:        ginmetrics.Counter,
+// 		Name:        "hms_patient_mgmt_patients_ipd",
+// 		Description: "Number of total IPD (In-Patient Department) patients",
+// 	}
+// 	return patientMetric
+// }
+
+// // Total OPD patients
+// func TotalOPDPatients() *ginmetrics.Metric {
+// 	patientMetric := &ginmetrics.Metric{
+// 		Type:        ginmetrics.Counter,
+// 		Name:        "hms_patient_mgmt_patients_opd",
+// 		Description: "Number of total OPD (Out-Patient Department) patients",
+// 	}
+// 	return patientMetric
+// }
