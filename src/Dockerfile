@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS build
+FROM golang:1.22-alpine AS build
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -13,7 +13,7 @@ COPY main.go ./main.go
 
 RUN go build -o ./dist/hms-patient-mgmt.sh
 
-FROM golang:alpine AS run
+FROM golang:1.22-alpine AS run
 WORKDIR /app
 COPY --from=build --chmod=500 /app/dist/hms-patient-mgmt.sh ./
 EXPOSE 8080
