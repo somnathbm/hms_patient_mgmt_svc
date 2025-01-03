@@ -4,6 +4,7 @@ import (
 	"hms_patient_mgmt_svc/api"
 	// "hms_patient_mgmt_svc/metrics"
 	// "github.com/penglongli/gin-metrics/ginmetrics"
+	// "github.com/joho/godotenv"
 )
 
 func main() {

@@ -1,24 +1,72 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 
 	"hms_patient_mgmt_svc/db"
+	"hms_patient_mgmt_svc/metrics"
 
 	"github.com/gin-gonic/gin"
 	// "github.com/penglongli/gin-metrics/ginmetrics"
 
 	"hms_patient_mgmt_svc/models"
+
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
+)
+
+const appName = "hms-pm"
+
+var (
+	tracer = otel.Tracer(appName)
+	meter  = otel.Meter(appName)
+	logger = otelslog.NewLogger(appName)
+	// patientCountMetric metric.Int64Counter
 )
 
 // func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
-func RunAppServer() *gin.Engine {
+func RunAppServer() {
+	// Handle SIGINT (CTRL + C) properly
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	// Setup Opentelemetry
+	otelShutdown, err := SetupOTelSDK(ctx)
+	if err != nil {
+		// return here
+	}
+	// Handle shutdown properly so that nothing leaks
+	defer func() {
+		err = errors.Join(err, otelShutdown(context.Background()))
+	}()
+
 	appRouter := gin.Default()
+	appRouter.Use(otelgin.Middleware("hms-pm-svc"))
+
+	// initialize custom metrics
+	allMetrics := metrics.GetAllMetrics()
 
 	// for service liveness check
 	appRouter.GET("/pm/healthy", func(c *gin.Context) {
+		// fire off the tracer
+		ctx, span := tracer.Start(c.Request.Context(), "/pm/healthy", trace.WithAttributes(attribute.String("message", "OK!!")))
+		defer span.End()
+
+		// set log
+		logger.InfoContext(ctx, "service is healthy", "pm-logger", true)
+
+		// no metrics
+		// send off the response
 		c.JSON(http.StatusOK, gin.H{
 			"status": "healthy!",
 		})
@@ -34,12 +82,24 @@ func RunAppServer() *gin.Engine {
 			})
 			return
 		}
-		// patientNum := len(result)
+		patientNum := len(result)
+
+		// fire off the tracer
+		ctx, span := tracer.Start(c.Request.Context(), "/pm/patients")
+		defer span.End()
+
+		// set log
+		logger.InfoContext(ctx, "patient count", "pm-logger", patientNum)
+
+		// set metrics
+		patientCountAttr := attribute.Int("patient.total", patientNum)
+		span.SetAttributes(patientCountAttr)
+		allMetrics["PatientCountMetric"].Add(ctx, 1, metric.WithAttributes(patientCountAttr))
+
 		// appMonitor.GetMetric("hms_patient_mgmt_patients_total").Add([]string{}, float64(patientNum))
 		c.JSON(http.StatusOK, gin.H{
 			"data": result,
 		})
-		return
 	})
 
 	// patient lookup using phone number
@@ -112,5 +172,11 @@ func RunAppServer() *gin.Engine {
 
 	appRouter.Run()
 
-	return appRouter
+	// Wait for interruption.
+	select {
+	case <-ctx.Done():
+		// Wait for first CTRL+C.
+		// Stop receiving signal notifications as soon as possible.
+		stop()
+	}
 }

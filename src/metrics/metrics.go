@@ -1,7 +1,32 @@
 package metrics
 
-func hello() {
+import (
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
+)
 
+const appName = "hms-pm"
+
+var meter = otel.Meter(appName)
+
+func patientCountMetric() (metric.Int64Counter, error) {
+	patientCnt, patientCntErr := meter.Int64Counter("patient.count",
+		metric.WithDescription("Total number of patients"),
+	)
+	if patientCntErr != nil {
+		return nil, patientCntErr
+	}
+	return patientCnt, nil
+}
+
+func GetAllMetrics() map[string]metric.Int64Counter {
+	allMetricsMap := make(map[string]metric.Int64Counter)
+	patientCountMetric, pcountMetricErr := patientCountMetric()
+	if pcountMetricErr != nil {
+		panic(pcountMetricErr)
+	}
+	allMetricsMap["PatientCountMetric"] = patientCountMetric
+	return allMetricsMap
 }
 
 // import (
