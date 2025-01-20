@@ -80,12 +80,6 @@ func newPropagator() propagation.TextMapPropagator {
 }
 
 func newTraceProvider(ctx context.Context) (*trace.TracerProvider, error) {
-	// traceExporter, err := stdouttrace.New(
-	// 	stdouttrace.WithPrettyPrint())
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	traceExporter, err := otlptracehttp.New(ctx)
 	if err != nil {
 		return nil, err
@@ -99,7 +93,6 @@ func newTraceProvider(ctx context.Context) (*trace.TracerProvider, error) {
 }
 
 func newMeterProvider(ctx context.Context) (*metric.MeterProvider, error) {
-	// metricExporter, err := stdoutmetric.New()
 	metricExporter, err := otlpmetrichttp.New(ctx)
 	if err != nil {
 		return nil, err
@@ -114,7 +107,6 @@ func newMeterProvider(ctx context.Context) (*metric.MeterProvider, error) {
 }
 
 func newLoggerProvider(ctx context.Context) (*log.LoggerProvider, error) {
-	// logExporter, err := stdoutlog.New()
 	logExporter, err := otlploghttp.New(ctx)
 	if err != nil {
 		return nil, err

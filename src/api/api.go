@@ -13,7 +13,6 @@ import (
 	"hms_patient_mgmt_svc/metrics"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/penglongli/gin-metrics/ginmetrics"
 
 	"hms_patient_mgmt_svc/models"
 
@@ -25,16 +24,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const appName = "hms-pm"
+const appName = "hms-pmgmt-svc"
 
 var (
 	tracer = otel.Tracer(appName)
-	meter  = otel.Meter(appName)
 	logger = otelslog.NewLogger(appName)
-	// patientCountMetric metric.Int64Counter
 )
 
-// func RunAppServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
 func RunAppServer() {
 	// Handle SIGINT (CTRL + C) properly
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -51,10 +47,11 @@ func RunAppServer() {
 	}()
 
 	appRouter := gin.Default()
-	appRouter.Use(otelgin.Middleware("hms-pm-svc"))
+	appRouter.Use(otelgin.Middleware("hms-pm-mgmt-svc"))
 
 	// initialize custom metrics
-	allMetrics := metrics.GetAllMetrics()
+	allMetrics := metrics.GetAllGaugeMetrics()
+	allCounterMetrics := metrics.GetAllCounterMetrics()
 
 	// for service liveness check
 	appRouter.GET("/pm/healthy", func(c *gin.Context) {
@@ -94,9 +91,8 @@ func RunAppServer() {
 		// set metrics
 		patientCountAttr := attribute.Int("patient.total", patientNum)
 		span.SetAttributes(patientCountAttr)
-		allMetrics["PatientCountMetric"].Add(ctx, 1, metric.WithAttributes(patientCountAttr))
+		allMetrics["PatientCountMetric"].Record(ctx, 1, metric.WithAttributes(patientCountAttr))
 
-		// appMonitor.GetMetric("hms_patient_mgmt_patients_total").Add([]string{}, float64(patientNum))
 		c.JSON(http.StatusOK, gin.H{
 			"data": result,
 		})
@@ -104,6 +100,10 @@ func RunAppServer() {
 
 	// patient lookup using phone number
 	appRouter.GET("/pm/patients/:phone", func(c *gin.Context) {
+		// fire off the tracer
+		ctx, span := tracer.Start(c.Request.Context(), c.Request.RequestURI)
+		defer span.End()
+
 		phone_num := c.Param("phone")
 		result, err := db.GetPatientInfoByPhone(phone_num)
 		if err != nil {
@@ -113,18 +113,26 @@ func RunAppServer() {
 			})
 			return
 		}
+
+		// set log if the DB operation succeeds
+		logger.InfoContext(ctx, "patient.info", "pm-logger", result)
+		// metrics - no needed
+
 		c.JSON(http.StatusOK, gin.H{
 			"data": result,
 		})
-		return
 	})
 
 	appRouter.POST("/pm/patients", func(c *gin.Context) {
 		var patientData models.PatientInfo
+		// fire off the tracer
+		ctx, span := tracer.Start(c.Request.Context(), c.Request.RequestURI)
+		defer span.End()
 
 		// ↴ this validates the payload
 		if err := c.ShouldBindJSON(&patientData); err != nil {
 			log.Fatalln("content parsing error", err.Error())
+			logger.ErrorContext(ctx, "patient.create.error", "pm-logger", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
@@ -153,8 +161,12 @@ func RunAppServer() {
 				// ↴ else insert the patient id into the patient info and return the data back
 				patientData.Medical_info.PatientId = *insertResult
 
+				// set log
+				logger.InfoContext(ctx, "patient.create.ok", "pm-logger", true)
 				// increment the metrics
-				// appMonitor.GetMetric("hms_patient_mgmt_patients_total").Inc([]string{})
+				if patientData.Medical_info.Department == "emg" {
+					allCounterMetrics["TotalEmergencyPatientCounterMetric"].Add(ctx, 1)
+				}
 
 				c.JSON(http.StatusOK, gin.H{
 					"data": patientData,

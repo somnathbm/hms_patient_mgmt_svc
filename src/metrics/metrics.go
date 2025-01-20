@@ -5,12 +5,13 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const appName = "hms-pm"
+const appName = "hms-pm-mgmt-svc"
 
 var meter = otel.Meter(appName)
 
-func patientCountMetric() (metric.Int64Counter, error) {
-	patientCnt, patientCntErr := meter.Int64Counter("patient.count",
+// total patient gauge metric
+func totalPatientsGaugeMetric() (metric.Int64Gauge, error) {
+	patientCnt, patientCntErr := meter.Int64Gauge("patients.total",
 		metric.WithDescription("Total number of patients"),
 	)
 	if patientCntErr != nil {
@@ -19,80 +20,95 @@ func patientCountMetric() (metric.Int64Counter, error) {
 	return patientCnt, nil
 }
 
-func GetAllMetrics() map[string]metric.Int64Counter {
-	allMetricsMap := make(map[string]metric.Int64Counter)
-	patientCountMetric, pcountMetricErr := patientCountMetric()
-	if pcountMetricErr != nil {
-		panic(pcountMetricErr)
+// Total emergency patients - gauge
+func totalEmergencyPatientsGaugeMetric() (metric.Int64Gauge, error) {
+	patientCnt, patientCntErr := meter.Int64Gauge("patients.emergency",
+		metric.WithDescription("Total emergency patients"),
+	)
+	if patientCntErr != nil {
+		return nil, patientCntErr
 	}
-	allMetricsMap["PatientCountMetric"] = patientCountMetric
+	return patientCnt, nil
+}
+
+// Total emergency patients - counter
+func totalEmergencyPatientsCounterMetric() (metric.Int64Counter, error) {
+	patientCnt, patientCntErr := meter.Int64Counter("patients.emergency",
+		metric.WithDescription("Total emergency patients"),
+	)
+	if patientCntErr != nil {
+		return nil, patientCntErr
+	}
+	return patientCnt, nil
+}
+
+// Total IPD patients
+func totalIPDPatientsGaugeMetric() (metric.Int64Gauge, error) {
+	patientCnt, patientCntErr := meter.Int64Gauge("patients.ipd",
+		metric.WithDescription("Total IPD patients"),
+	)
+	if patientCntErr != nil {
+		return nil, patientCntErr
+	}
+	return patientCnt, nil
+}
+
+// Total OPD patients
+func totalOPDPatientsGaugeMetric() (metric.Int64Gauge, error) {
+	patientCnt, patientCntErr := meter.Int64Gauge("patients.opd",
+		metric.WithDescription("Total OPD patients"),
+	)
+	if patientCntErr != nil {
+		return nil, patientCntErr
+	}
+	return patientCnt, nil
+}
+
+func GetAllGaugeMetrics() map[string]metric.Int64Gauge {
+	allMetricsMap := make(map[string]metric.Int64Gauge)
+	totalPatientsGaugeMetric, totalPatientsGaugeMetricErr := totalPatientsGaugeMetric()
+	if totalPatientsGaugeMetricErr != nil {
+		panic(totalPatientsGaugeMetricErr)
+	}
+	totalEmergencyPatientsGaugeMetric, totalEmergencyPatientsGaugeMetricErr := totalEmergencyPatientsGaugeMetric()
+	if totalEmergencyPatientsGaugeMetricErr != nil {
+		panic(totalEmergencyPatientsGaugeMetricErr)
+	}
+	totalIPDPatientsGaugeMetric, totalIPDPatientsGaugeMetricErr := totalIPDPatientsGaugeMetric()
+	if totalIPDPatientsGaugeMetricErr != nil {
+		panic(totalIPDPatientsGaugeMetricErr)
+	}
+	totalOPDPatientsGaugeMetric, totalOPDPatientsGaugeMetricErr := totalOPDPatientsGaugeMetric()
+	if totalOPDPatientsGaugeMetricErr != nil {
+		panic(totalOPDPatientsGaugeMetricErr)
+	}
+	allMetricsMap["TotalPatientsGaugeMetric"] = totalPatientsGaugeMetric
+	allMetricsMap["TotalEmergencyPatientGaugeMetric"] = totalEmergencyPatientsGaugeMetric
+	allMetricsMap["totalIPDPatientsGaugeMetric"] = totalIPDPatientsGaugeMetric
+	allMetricsMap["totalOPDPatientsGaugeMetric"] = totalOPDPatientsGaugeMetric
+
 	return allMetricsMap
 }
 
-// import (
-// 	"github.com/gin-gonic/gin"
-// 	// "github.com/penglongli/gin-metrics/ginmetrics"
-// )
+func GetAllCounterMetrics() map[string]metric.Int64Counter {
+	allMetricsMap := make(map[string]metric.Int64Counter)
+	totalEmergencyPatientsCounterMetric, totalEmergencyPatientsCounterMetricErr := totalEmergencyPatientsCounterMetric()
+	if totalEmergencyPatientsCounterMetricErr != nil {
+		panic(totalEmergencyPatientsCounterMetricErr)
+	}
+	// totalIPDPatientsGaugeMetric, totalIPDPatientsGaugeMetricErr := totalIPDPatientsGaugeMetric()
+	// if totalIPDPatientsGaugeMetricErr != nil {
+	// 	panic(totalIPDPatientsGaugeMetricErr)
+	// }
+	// totalOPDPatientsGaugeMetric, totalOPDPatientsGaugeMetricErr := totalOPDPatientsGaugeMetric()
+	// if totalOPDPatientsGaugeMetricErr != nil {
+	// 	panic(totalOPDPatientsGaugeMetricErr)
+	// }
+	// allMetricsMap["TotalPatientsGaugeMetric"] = totalPatientsGaugeMetric
+	// allMetricsMap["TotalEmergencyPatientGaugeMetric"] = totalEmergencyPatientsGaugeMetric
+	allMetricsMap["TotalEmergencyPatientCounterMetric"] = totalEmergencyPatientsCounterMetric
+	// allMetricsMap["totalIPDPatientsGaugeMetric"] = totalIPDPatientsGaugeMetric
+	// allMetricsMap["totalOPDPatientsGaugeMetric"] = totalOPDPatientsGaugeMetric
 
-// func GetMetricsInstance() *ginmetrics.Monitor {
-// 	monitor := ginmetrics.GetMonitor()
-// 	return monitor
-// }
-
-// func RunMetricsServer(appMonitor *ginmetrics.Monitor) *gin.Engine {
-// 	metricRouter := gin.Default()
-
-// 	appMonitor.SetMetricPath("/metrics")
-
-// 	// // add the metrics
-// 	appMonitor.AddMetric(TotalPatientsMetric())
-// 	appMonitor.AddMetric(TotalEmergencyPatients())
-// 	appMonitor.AddMetric(TotalIPDPatients())
-// 	appMonitor.AddMetric(TotalOPDPatients())
-
-// 	// appMonitor.UseWithoutExposingEndpoint(appRouter)
-// 	appMonitor.Expose(metricRouter)
-
-// 	return metricRouter
-// }
-
-// // Total patients
-// func TotalPatientsMetric() *ginmetrics.Metric {
-// 	patientMetric := &ginmetrics.Metric{
-// 		Type:        ginmetrics.Counter,
-// 		Name:        "hms_patient_mgmt_patients_total",
-// 		Description: "Number of total patients",
-// 		// Labels:      []string{"patients_total"},
-// 	}
-// 	return patientMetric
-// }
-
-// // Total emergency patients
-// func TotalEmergencyPatients() *ginmetrics.Metric {
-// 	patientMetric := &ginmetrics.Metric{
-// 		Type:        ginmetrics.Counter,
-// 		Name:        "hms_patient_mgmt_patients_emg",
-// 		Description: "Number of total emergency patients",
-// 	}
-// 	return patientMetric
-// }
-
-// // Total IPD patients
-// func TotalIPDPatients() *ginmetrics.Metric {
-// 	patientMetric := &ginmetrics.Metric{
-// 		Type:        ginmetrics.Counter,
-// 		Name:        "hms_patient_mgmt_patients_ipd",
-// 		Description: "Number of total IPD (In-Patient Department) patients",
-// 	}
-// 	return patientMetric
-// }
-
-// // Total OPD patients
-// func TotalOPDPatients() *ginmetrics.Metric {
-// 	patientMetric := &ginmetrics.Metric{
-// 		Type:        ginmetrics.Counter,
-// 		Name:        "hms_patient_mgmt_patients_opd",
-// 		Description: "Number of total OPD (Out-Patient Department) patients",
-// 	}
-// 	return patientMetric
-// }
+	return allMetricsMap
+}
