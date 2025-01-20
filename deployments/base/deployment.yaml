@@ -24,24 +24,47 @@ spec:
       app: hms-patient-mgmt-pod
   template:
     metadata:
+      # annotations:
+      #   sidecar.opentelemetry.io/inject: "true"
+        # instrumentation.opentelemetry.io/inject-go: "true"
+        # instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/app/hms-patient-mgmt.sh"
       labels:
         app: hms-patient-mgmt-pod
     spec:
       serviceAccountName: hms-pods-sa
       containers:
       - name: hms-patient-mgmt-app
-        image: somnathbm/hms-patient-mgmt-svc:v0.0.6
-        livenessProbe:
-          httpGet:
-            path: /pm/healthy
-            port: app
-          initialDelaySeconds: 10
-          periodSeconds: 20
+        image: somnathbm/hms-patient-mgmt-svc:v0.0.13
+        # livenessProbe:
+        #   httpGet:
+        #     path: /pm/healthy
+        #     port: app
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 20
         ports:
         - name: app
           containerPort: 8080
-        - name: metrics
-          containerPort: 8081
+        securityContext:
+          runAsUser: 0
+          privileged: true
+          capabilities:
+            add:
+            - SYS_PTRACE
         envFrom:
         - secretRef:
             name: hms-patient-mgmt-secret
+        env:
+        - name: OTEL_SERVICE_NAME
+          value: hms-pm-mgmt-svc
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: https://otlp.nr-data.net
+        - name: OTEL_EXPORTER_OTLP_HEADERS
+          value: api-key=65f6943cf197ab6ebe86f27b0e41a1b6FFFFNRAL
+        - name: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
+          value: "4095"
+        - name: OTEL_EXPORTER_OTLP_COMPRESSION
+          value: gzip
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: http/protobuf
+        - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+          value: delta
