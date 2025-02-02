@@ -182,6 +182,24 @@ func RunAppServer() {
 		}
 	})
 
+	appRouter.GET("/pm/bed_stats", func(c *gin.Context) {
+		// fire off the tracer
+		// ctx, span := tracer.Start(c.Request.Context(), c.Request.RequestURI)
+		// defer span.End()
+
+		resp, err := http.Get("http://hms-bed-monitor-svc/bm/beds")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"data":  "not found",
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"data": resp,
+		})
+	})
+
 	appRouter.Run()
 
 	// Wait for interruption.
