@@ -188,7 +188,7 @@ func RunAppServer() {
 		// ctx, span := tracer.Start(c.Request.Context(), c.Request.RequestURI)
 		// defer span.End()
 
-		resp, err := http.Get("http://hms-bed-monitor-svc/bm/beds")
+		resp, err := http.Get("http://hms-bed-monitor-svc-dev/bm/beds")
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"data":  "not found",
