@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -195,8 +196,17 @@ func RunAppServer() {
 			})
 			return
 		}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"data":  "not found",
+				"error": err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
-			"data": resp,
+			"data": body,
 		})
 	})
 
